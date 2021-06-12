@@ -10,7 +10,7 @@ from collections import Counter
 
 # Specify k to create matrix
 dna_bases_set = set('ACGT')
-k = 7
+k = 6
 
 
 def create_matrix(file,k):
@@ -90,6 +90,7 @@ if __name__== '__main__':
     
     plots_folder = 'output'
     file_name = fasta_file[:-6] + '_matrix_k_' + str(k) + '.csv'
+    file_name = 'kmerMatrix.csv'
     file_name = plots_folder + '/' + file_name
     kmerMatrix.to_csv(file_name,  header = True, index = True)
     print('done')

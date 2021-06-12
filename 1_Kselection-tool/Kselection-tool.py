@@ -112,12 +112,10 @@ if __name__== '__main__':
         
         # constructing kmerMatrix
         kmerMatrix = create_matrix(fasta_file_path,k)
-        print("kmermatrix created")
         
         
         # compute pairwise distances
         D = pairwise_distances(kmerMatrix, metric='hamming', n_jobs = 4)
-        print("done")
         
         for level in tax_levels:
             
@@ -129,11 +127,9 @@ if __name__== '__main__':
             y = targets[to_keep]
             d = D[to_keep]
             d = d[:,to_keep]
-            print("Done2")
             
             # appending silhouette score
             silh_coef_dict[level].append(silhouette_score(d, y, metric='precomputed', n_jobs = 4))
-            print("Done3")
         
         del D,d
     
