@@ -1,0 +1,14 @@
+"measures","values"
+"num.attributes",598
+"num.instances",331
+"num.inputs",582
+"num.labels",16
+"num.labelsets",5
+"num.single.labelsets",0
+"max.frequency",119
+"cardinality",4
+"density",0.25
+"meanIR",5.97536227737819
+"scumble",0.0731155245981206
+"scumble.cv",1.03199257288403
+"tcs",10.7484970824053

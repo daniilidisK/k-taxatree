@@ -161,7 +161,7 @@ smote_oversampling <- function(taxonomies_table, kmerMatrix, taxa){
     
     for (min_class in minority_classes_3){
       smote_over_coeffs[min_class] <- 1
-    } 
+    }
     
     # apply smote algorithm
     Xy <- cbind(X, Y_ = as.factor(y_labeled))

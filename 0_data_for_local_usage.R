@@ -11,7 +11,7 @@ library(seqinr)
 data <- read.csv('emp-data/emp-taxonomy-validation.csv')
 
 # undersample
-my_data <-data[which(data$order == 'o__Thiohalorhabdales' | data$order == 'o__Spirobacillales'| data$order == 'o__E2' | data$order == 'o__GIF10'),]
+my_data <-data[which(data$order == 'o__Thiohalorhabdales' | data$order == 'o__Spirobacillales'| data$order == 'o__E2' | data$order == 'o__GIF10' | data$order == 'o__SSS58A'),]
 
 # split data
 taxa <- c('kingdom', 'phylum', 'class', 'order')

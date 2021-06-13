@@ -1,0 +1,6 @@
+"","accuracy","precision","micro_precision","macro_precision","recall","micro_recall","macro_recall","fmeasure","micro_fmeasure","macro_fmeasure","hamming_loss","subset_accuracy","average_precision","one_error","coverage","ranking_loss"
+"1",1,1,1,1,1,1,1,1,1,1,0,1,1,0,3,0
+"2",1,1,1,1,1,1,1,1,1,1,0,1,1,0,3,0
+"3",1,1,1,1,1,1,1,1,1,1,0,1,1,0,3,0
+"4",1,1,1,1,1,1,1,1,1,1,0,1,1,0,3,0
+"5",1,1,1,1,1,1,1,1,1,1,0,1,1,0,3,0

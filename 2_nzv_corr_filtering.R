@@ -67,8 +67,8 @@ kmerMatrix <- kmerMatrix[, -highlyCorNZV]
 rm(corMat, highlyCorNZV)
 
 # PCA feature selection
-#kmerMatrix <- PCA_feature_selection(kmerMatrix, info_perc = 0.9)
+kmerMatrix <- PCA_feature_selection(kmerMatrix, info_perc = 0.90)
 
-dir.create("emp-data")
+dir.create("emp-data-loc")
 # save
 write.csv(kmerMatrix, 'emp-data-loc/kmerMatrix_nzv_corr_PCA_099.csv')
