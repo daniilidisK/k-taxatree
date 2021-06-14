@@ -45,7 +45,7 @@ taxonomies_table <- read.csv(taxonomyFilepath) #[,-1]
 # Creating data matrix
 # nzv_corr file: data/dna_sequences_matrix_k_7.csv
 # kmerAnalyzer file: data/kmerMatrix_nzv_corr.csv
-kmerMatrix <- read.csv(paste0(input_folder, '/kmerMatrix_nzv_corr_PCA_099.csv'),
+kmerMatrix <- read.csv(paste0(input_folder, '/kmerMatrix_fs.csv'),
                        row.names = 1)
 rownames(kmerMatrix) <- taxonomies_table$ID
 
@@ -126,11 +126,12 @@ mat <- rf_hyperparameters_optimization(Xy = Xy,
                                         taxonomies_table = taxonomies_table)
  
 opt_results <- which(mat$metric == max(mat$metric))
-mtry_opt <- mat$mtry[opt_results[1]] # for nzv_corr_boruta: 11, for kmerAnalyzer: 10
-ntrees_opt <- mat$ntrees[opt_results[1]] # for nzv_corr_boruta: 500, for kmerAnalyzer: 150
+opt_results <- opt_results[1]
+mtry_opt <- mat$mtry[opt_results] # for nzv_corr_boruta: 11, for kmerAnalyzer: 10
+ntrees_opt <- mat$ntrees[opt_results] # for nzv_corr_boruta: 500, for kmerAnalyzer: 150
 
-write.table(mat[opt_results, ], 
-            paste0(output_folder, "/optimal hyperparameters.txt"),
+write.csv(mat[opt_results, ], 
+            paste0(output_folder, "/optimal hyperparameters.csv"), 
             row.names = FALSE)
 
                   #anastasis      # using PCA_fs_0.9     #accuracy       #f1          #using PCA_fs_0.95    #f1    #using PCA_fs_1  #f1
@@ -138,7 +139,7 @@ write.table(mat[opt_results, ],
 #ntrees_opt <- 100     #500                                 #300          500                                450                    400
 
 # calculating metrics and feature importances
-num_of_experiments = 5
+num_of_experiments = 10
 out <- rf_average_metrics(Xy = Xy, 
                           Xy_to_add = Xy_to_add, 
                           num_of_experiments = num_of_experiments,

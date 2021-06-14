@@ -1,4 +1,4 @@
-excluding_unassigned <- function(kmerMatrix, 
+excluding_unassigned <- function(kmerMatrix,
                                  taxonomies_table, 
                                  taxa){
   
@@ -8,18 +8,30 @@ excluding_unassigned <- function(kmerMatrix,
   # excluding totally unassigned rows
   to_drop <- which(taxonomies == 'Unassigned' | taxonomies == 'Unclassified')
   
-  # # X test
-  # X_test <- kmerMatrix[to_drop, ]
-  # test_sequences <- taxonomies_table[to_drop,]$Sequence
-  
-  
-  # drop
-  if (length(to_drop)>1){
+  # X test
+  if (length(to_drop) > 0) {
+    
+    X_test <- kmerMatrix[to_drop, ]
+    test_sequences <- taxonomies_table[to_drop,]$sequence
+    # drop
     taxonomies_table <- taxonomies_table[-to_drop,]
     kmerMatrix <- kmerMatrix[-to_drop, ]
+    
+  } else {
+    
+    X_test <- kmerMatrix[to_drop, ]
+    test_sequences <- taxonomies_table[to_drop,]$sequence
+    # drop
+    taxonomies_table <- taxonomies_table
+    kmerMatrix <- kmerMatrix
+    
   }
   
-  return(list(kmerMatrix, taxonomies_table))
+  
+  return(list(kmerMatrix, 
+              taxonomies_table, 
+              X_test, 
+              test_sequences))
 }
 
 
@@ -54,7 +66,7 @@ excluding_singletons <- function(kmerMatrix,
       if (curr_level == taxa[1]){
         
         to_be_deleted <- c(to_be_deleted, index_of_singleton)
-      
+        
       }
       
       # else delete current level from singletons
@@ -161,7 +173,7 @@ smote_oversampling <- function(taxonomies_table, kmerMatrix, taxa){
     
     for (min_class in minority_classes_3){
       smote_over_coeffs[min_class] <- 1
-    }
+    } 
     
     # apply smote algorithm
     Xy <- cbind(X, Y_ = as.factor(y_labeled))
@@ -215,9 +227,9 @@ y_binary_vector_encoding <- function(taxonomies_table,
   
   # all names
   taxa_names <- c(unique(taxonomies_table[,taxa[1]]), 
-                             unique(taxonomies_table[,taxa[2]]),
-                             unique(taxonomies_table[,taxa[3]]),
-                             unique(taxonomies_table[,taxa[4]]))
+                  unique(taxonomies_table[,taxa[2]]),
+                  unique(taxonomies_table[,taxa[3]]),
+                  unique(taxonomies_table[,taxa[4]]))
   
   # exclude unassigned
   taxa_names <- taxa_names[taxa_names != ""]
@@ -303,12 +315,25 @@ rf_hyperparameters_optimization <- function(Xy,
   #                                          n_kmers = n_kmers),
   #                          mc.cores = 4) 
   
- # inputs <- inputs[, -3]
-  inputs <- group_by(inputs,mtry, ntrees) %>%
-    summarise(mtry, ntrees, metric = sum(metric)) %>%
-    unique()
+  # # inputs <- inputs[, -3]
+  # inputs <- group_by(inputs,mtry, ntrees) %>%
+  #   summarize(mtry, ntrees, metric = sum(metric)) %>%
+  #   unique()
+
+  # inputs$metric <- inputs$metric / num_of_experiments
+  # 
   
-  inputs$metric <- inputs$metric / num_of_experiments
+  
+  inputs$tuples <- paste(inputs$mtry, inputs$ntrees, sep = ',')
+  unique_tuples <- unique(inputs$tuples)
+  to_keep <- c()
+  for (tup in unique_tuples){
+    tup_indices <- which(inputs$tuples == tup)
+    inputs[tup_indices,]$metric <- sum(inputs[tup_indices,]$metric) / num_of_experiments
+    to_keep <- c(to_keep, tup_indices[1])
+  }
+  
+  inputs <- inputs[to_keep,-4]
   
   return(inputs)
   
@@ -633,11 +658,11 @@ rf_average_metrics <- function(Xy,
     metrics_df[counter, 8] <- fmeasure(test_DT[, targets], response_pred, undefined_value = "ignore")
     metrics_df[counter, 9] <- micro_fmeasure(test_DT[, targets], response_pred, undefined_value = "ignore")
     metrics_df[counter, 10] <- macro_fmeasure(test_DT[, targets], response_pred, undefined_value = "ignore") 
-     
+    
     # Basic metrics
     metrics_df[counter, 11] <- hamming_loss(test_DT[, targets], response_pred)
     metrics_df[counter, 12] <- subset_accuracy(test_DT[, targets], response_pred)
-     
+    
     # Ranking based metrics
     metrics_df[counter, 13] <- average_precision(test_DT[, targets], prob_pred)
     metrics_df[counter, 14] <- one_error(test_DT[, targets], prob_pred)
@@ -659,8 +684,8 @@ rf_average_metrics <- function(Xy,
   
   
   write.table(paths_prob,  
-            paste0(output_folder, "/paths_probs_table.csv"),
-            row.names = FALSE)
+              paste0(output_folder, "/paths_probs_table.csv"),
+              row.names = FALSE)
   
   #rownames(metrics_df) <- c(1:num_of_experiments)
   
@@ -734,11 +759,10 @@ modify_predictions <- function(y_pred, threshold, taxa){
       #print(to_append)
       if (length(to_append) > 1){
         to_append <- to_append[which(x[to_append] == max(x[to_append]))]
-        
-        # if (length(to_append) > 1){
-        #   print('hey op')
-        # }
       }
+      
+      to_append <- gsub('_lp_','\\[',to_append)
+      to_append <- gsub('_rp_','\\]',to_append)
       to_paste <- c(to_paste, to_append) 
     }
     

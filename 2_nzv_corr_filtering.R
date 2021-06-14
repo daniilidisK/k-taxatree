@@ -51,7 +51,7 @@ PCA_feature_selection <- function(kmerMatrix, info_perc){
 kmerMatrix <- read.csv('emp-data-loc/kmerMatrix.csv', row.names = 1)
 
 # remove near zero variance predictors
-nzv <- nearZeroVar(kmerMatrix, freqCut = 15, uniqueCut = 0.5) # 0.3 
+nzv <- nearZeroVar(kmerMatrix, freqCut = 15, uniqueCut = 0.7) # 0.3 
 
 if(length(nzv) > 0){
   kmerMatrix <- kmerMatrix[, -nzv]
@@ -69,6 +69,5 @@ rm(corMat, highlyCorNZV)
 # PCA feature selection
 kmerMatrix <- PCA_feature_selection(kmerMatrix, info_perc = 0.90)
 
-dir.create("emp-data-loc")
 # save
-write.csv(kmerMatrix, 'emp-data-loc/kmerMatrix_nzv_corr_PCA_099.csv')
+write.csv(kmerMatrix, 'emp-data-loc/kmerMatrix_fs.csv')

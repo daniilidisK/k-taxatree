@@ -11,7 +11,15 @@ library(seqinr)
 data <- read.csv('emp-data/emp-taxonomy-validation.csv')
 
 # undersample
-my_data <-data[which(data$order == 'o__Thiohalorhabdales' | data$order == 'o__Spirobacillales'| data$order == 'o__E2' | data$order == 'o__GIF10' | data$order == 'o__SSS58A'),]
+my_data <-data[which(data$order == 'o__Thiohalorhabdales' | 
+                       data$order == 'o__Spirobacillales'| 
+                       data$order == 'o__E2' | 
+                       data$order == 'o__GIF10' | 
+                       data$order == 'o__SSS58A' | 
+                       data$order == 'o__PHOS-HE93' | 
+                       data$order == 'o__PYR10d3' | 
+                       data$order == 'o__RsaHF231' |
+                       data$order == 'o__Sulfolobales'),]
 
 # split data
 taxa <- c('kingdom', 'phylum', 'class', 'order')
@@ -53,4 +61,4 @@ write.fasta(sequences = as.list(sequences),
             as.string = TRUE,
             nbchar = 50)
 
-write.csv(train_data, 'emp-data-loc/emp-taxonomy-validation-loc.csv', row.names = F)
+write.csv(validation_data, 'emp-data-loc/emp-taxonomy-validation-loc.csv', row.names = F)
