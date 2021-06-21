@@ -8,6 +8,7 @@ import shutil
 from sklearn.feature_extraction import DictVectorizer
 from collections import Counter
 from sklearn.metrics import pairwise_distances
+import silh
 
 ############## PARAMETERS ####################
 dna_bases_set = set('ACGT')
@@ -115,7 +116,7 @@ if __name__== '__main__':
         
         
         # compute pairwise distances
-        D = pairwise_distances(kmerMatrix, metric='hamming', n_jobs = 4)
+        # D = pairwise_distances(kmerMatrix, metric='hamming', n_jobs = 4)
         
         for level in tax_levels:
             
@@ -124,14 +125,16 @@ if __name__== '__main__':
             
             # exclude unassigned
             to_keep = exclude_unassigned(targets, kmerMatrix)
-            y = targets[to_keep]
-            d = D[to_keep]
-            d = d[:,to_keep]
+            # y = targets[to_keep]
+            # d = D[to_keep]
+            # d = d[:,to_keep]
+            targets = targets.astype('category')
+            targets = targets.cat.codes
             
             # appending silhouette score
-            silh_coef_dict[level].append(silhouette_score(d, y, metric='precomputed', n_jobs = 4))
+            silh_coef_dict[level].append(silh.silhouette_score_block(kmerMatrix.iloc[to_keep,].values, targets[to_keep].values, metric='hamming', n_jobs = 8))
         
-        del D,d
+        
     
     print('\n')
     

@@ -125,35 +125,6 @@ smote_oversampling <- function(taxonomies_table, kmerMatrix, taxa){
     # specifying X matrix
     X <- kmerMatrix[assigned,]
     
-    # # count classes -> identify which classes to oversample
-    # count_classes <- plyr::count(y_labeled)
-    # minority_classes_1 <- count_classes[which(count_classes$freq <= 5),]$x
-    # minority_classes_2 <- count_classes[which(count_classes$freq > 5 & count_classes$freq <= 10),]$x
-    # 
-    # # Specifying smote coefficients
-    # smote_over_coeffs <- hash()
-    # 
-    # if (level != taxa[1]) {
-    # 
-    #   for (min_class in minority_classes_1){
-    #     smote_over_coeffs[min_class] <- 4
-    #   }
-    #   
-    #   for (min_class in minority_classes_2){
-    #     smote_over_coeffs[min_class] <- 2
-    #   }
-    # } else {
-    #   
-    #   for (min_class in minority_classes_1){
-    #     smote_over_coeffs[min_class] <- 8
-    #   }
-    #   
-    #   for (min_class in minority_classes_2){
-    #     smote_over_coeffs[min_class] <- 4
-    #   }
-    # }
-    # 
-    
     # count classes -> identify which classes to oversample
     count_classes <- plyr::count(y_labeled)
     minority_classes_1 <- count_classes[which(count_classes$freq <= 10),]$x

@@ -1,6 +1,0 @@
-Level: kingdom, max_silhouette = 0.25521668379924495, k_value = 5 
-Level: phylum, max_silhouette = 0.24026775201529138, k_value = 6 
-Level: class, max_silhouette = 0.25919258483382085, k_value = 6 
-Level: order, max_silhouette = 0.21820022350547347, k_value = 5 
-
-Based on the printed information above and the plots generated inside /home/togkousa/INEBwork/kmertaxonomyFF/kmerTaxonomyFF/1_Kselection-tool/output/ directory, please select k-value to generate kmerMatrix and run create_matrix.py script
