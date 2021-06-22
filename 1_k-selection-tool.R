@@ -3,8 +3,6 @@ cat("\014")
 rm(list = ls())
 
 # libraries
-library(kmer)
-library(seqinr)
 library(stringr)
 library(parallel)
 library(gtools)
@@ -12,18 +10,18 @@ library(dplyr)
 library(data.table)
 library(stats)
 library(cluster)
-library(parallelDist)
-library(RcppParallel)
-library(microbenchmark)
-library(doParallel)
 library(reticulate)
 
-use_python("C:/Users/User/Anaconda3/envs/r-reticulate/python.exe")
+use_python("/home/togkousa/Anaconda3/envs/r-reticulate/python.exe")
+
+# for server
+# use_python("/home/user/anaconda3/envs/togkou_1/bin/python.exe")
+
 source_python('1_Kselection-tool/dist.py')
 
 
-detectedCores <- parallel::detectCores()
-registerDoParallel(cores=detectedCores-1) 
+# detectedCores <- parallel::detectCores()
+# registerDoParallel(cores=detectedCores-1) 
 
 ######################### FUNTIONS #############################################
 count_kmers_in_seq <- function(seq, k, seq_name){
@@ -48,7 +46,7 @@ count_kmers_in_file <- function(sequences, k, seq_names){
   count.kmers <- function(i){
     count_kmers_in_seq(sequences[i], k, seq_names[i])
   }
-  out <- mclapply(c(1:length(sequences)), count.kmers, mc.cores = 4)
+  out <- mclapply(c(1:length(sequences)), count.kmers, mc.cores = 8)
   
   kmerMatrix <- as.matrix(rbindlist(out, fill = T))
   kmerMatrix[which(is.na(kmerMatrix), arr.ind = T)] <- 0
@@ -122,7 +120,7 @@ taxa_file <- read.csv('emp-data-loc/emp-taxonomy-train-test-loc.csv')
 taxa <- c('kingdom', 'phylum', 'class', 'order')
 
 # values of k
-kvals <- c(4:15)
+kvals <- c(4:8)
 
 # sequences, seqnames
 sequences <- taxa_file$sequence
