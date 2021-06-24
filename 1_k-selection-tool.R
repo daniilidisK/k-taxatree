@@ -10,14 +10,15 @@ library(dplyr)
 library(data.table)
 library(stats)
 library(cluster)
-library(reticulate)
+# library(reticulate)
+library(stringdist)
 
-use_python("/home/togkousa/Anaconda3/envs/r-reticulate/python.exe")
+# use_python("/home/togkousa/Anaconda3/envs/r-reticulate/python.exe")
 
 # for server
 # use_python("/home/user/anaconda3/envs/togkou_1/bin/python.exe")
 
-source_python('1_Kselection-tool/dist.py')
+# source_python('1_Kselection-tool/dist.py')
 
 
 # detectedCores <- parallel::detectCores()
@@ -55,61 +56,27 @@ count_kmers_in_file <- function(sequences, k, seq_names){
   return(kmerMatrix)
 }
 
-# pairwise_distances <- function(X){
-#   
-#   minkowski_dist <- function(a,b){
-#     
-#     one.run <- function(i){
-#       abs(a[i] - b[i])
-#     }
-#     
-#     parallelSum <- function(x) {
-#       
-#       items <- length(x)
-#       batches <- detectedCores * 4
-#       batchSets <- split(x, rep(1:batches, length.out=items))
-#       
-#       finalSum <- foreach(b=iter(batchSets, by='row'), .combine="+") %dopar% sum(b)
-#       
-#       return (finalSum)
-#     }
-#     
-#     #return(parallelSum(unlist(mclapply(c(1:length(a)), one.run, mc.cores = 4))))
-#     return(parallelSum(abs(a-b)))
-#     
-#     
-#     #sum(unlist(mclapply(c(1:length(a)), one.run, mc.cores = 4)))
-#     
-#   }
-#   
-#   calculate_distances <- function(X, pos){
-#     
-#     n <- nrow(X)
-#     this_row <- X[pos, ]
-#     
-#     one.run <- function(i){
-#       minkowski_dist(this_row, X[i, ])
-#     }
-#     
-#     return(unlist(lapply(c((pos+1): n-1), one.run )))
-#     
-#   }
-#   
-#   
-#   D <- matrix(0L, nrow = nrow(X), ncol = nrow(X))
-#   dim_D <- nrow(X)
-#   
-#   for (j in 1:(dim_D - 1)){
-#     print(paste0('Row ', j))
-#     row_dists <- calculate_distances(X, j)
-#     D[(j+1):dim_D, j] <- row_dists
-#     D[j,(j+1):dim_D] <- row_dists
-#   }
-#   
-#   return(D)
-#   
-# }
-# 
+pairwise_distances <- function(X){
+  
+  convert_to_char <- function(X){
+    
+    one.run <- function(i){
+      paste(as.character(X[i,]), collapse = '')
+    }
+    
+    unlist(mclapply(c(1:nrow(X)), one.run, mc.cores = 4 ))
+    
+  }
+  
+  s <- convert_to_char(X)
+  
+  D <- stringdistmatrix(s, s, 'hamming', nthread = 4)
+  rownames(D) <- rownames(X)
+  colnames(D) <- rownames(X)
+  
+  return(D)
+}
+
 
 ###################### ANALYSIS ################################################
 
@@ -120,7 +87,7 @@ taxa_file <- read.csv('emp-data-loc/emp-taxonomy-train-test-loc.csv')
 taxa <- c('kingdom', 'phylum', 'class', 'order')
 
 # values of k
-kvals <- c(4:8)
+kvals <- c(4:10)
 
 # sequences, seqnames
 sequences <- taxa_file$sequence
@@ -138,9 +105,8 @@ for (k in kvals){
   kmerMatrix <- count_kmers_in_file(sequences = sequences, seq_names = seq_names, k = k)
   print('Kmer matrix created')
   
-  D <- dist_python(kmerMatrix)
-  rownames(D) <- rownames(kmerMatrix)
-  colnames(D) <- rownames(kmerMatrix)
+  # calculate pairwise distances
+  D <- pairwise_distances(kmerMatrix)
   
   print('Distance matrix calculated')
   rm(kmerMatrix)
