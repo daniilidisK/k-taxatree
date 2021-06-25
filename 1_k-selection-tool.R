@@ -12,6 +12,7 @@ library(stats)
 library(cluster)
 # library(reticulate)
 library(stringdist)
+library(Rfast)
 
 # use_python("/home/togkousa/Anaconda3/envs/r-reticulate/python.exe")
 
@@ -106,7 +107,9 @@ for (k in kvals){
   print('Kmer matrix created')
   
   # calculate pairwise distances
-  D <- pairwise_distances(kmerMatrix)
+  # D <-  as.matrix(dist(kmerMatrix, method = 'minkowski', p = 1))
+  # D <- pairwise_distances(kmerMatrix)
+  D <- Dist(kmerMatrix, method = 'minkowski', p = 1)
   
   print('Distance matrix calculated')
   rm(kmerMatrix)
@@ -141,6 +144,7 @@ for (k in kvals){
   rm(silh_row, targets, D)
   
 }
+
 
 write.csv(silh_scores_matrix, file = 'silh.csv')
 
