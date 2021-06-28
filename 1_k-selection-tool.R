@@ -3,27 +3,16 @@ cat("\014")
 rm(list = ls())
 
 # libraries
-library(stringr)
+#library(stringr)
 library(parallel)
-library(gtools)
-library(dplyr)
+#library(gtools)
+#library(dplyr)
 library(data.table)
-library(stats)
+#library(stats)
 library(cluster)
-# library(reticulate)
-library(stringdist)
 library(Rfast)
-
-# use_python("/home/togkousa/Anaconda3/envs/r-reticulate/python.exe")
-
-# for server
-# use_python("/home/user/anaconda3/envs/togkou_1/bin/python.exe")
-
-# source_python('1_Kselection-tool/dist.py')
-
-
-# detectedCores <- parallel::detectCores()
-# registerDoParallel(cores=detectedCores-1) 
+library(plyr)
+# library(stringdist)
 
 ######################### FUNTIONS #############################################
 count_kmers_in_seq <- function(seq, k, seq_name){
@@ -33,7 +22,7 @@ count_kmers_in_seq <- function(seq, k, seq_name){
   }
   
   out <- lapply(c(1:(nchar(seq)-k+1)), one.run)
-  kmers_row <- plyr::count(unlist(out))
+  kmers_row <- count(unlist(out))
   kmers_row_mat <- matrix(kmers_row$freq, 
                           nrow = 1, 
                           ncol = nrow(kmers_row), 
@@ -57,27 +46,27 @@ count_kmers_in_file <- function(sequences, k, seq_names){
   return(kmerMatrix)
 }
 
-pairwise_distances <- function(X){
-  
-  convert_to_char <- function(X){
-    
-    one.run <- function(i){
-      paste(as.character(X[i,]), collapse = '')
-    }
-    
-    unlist(mclapply(c(1:nrow(X)), one.run, mc.cores = 4 ))
-    
-  }
-  
-  s <- convert_to_char(X)
-  
-  D <- stringdistmatrix(s, s, 'hamming', nthread = 4)
-  rownames(D) <- rownames(X)
-  colnames(D) <- rownames(X)
-  
-  return(D)
-}
-
+# pairwise_distances <- function(X){
+#   
+#   convert_to_char <- function(X){
+#     
+#     one.run <- function(i){
+#       paste(as.character(X[i,]), collapse = '')
+#     }
+#     
+#     unlist(mclapply(c(1:nrow(X)), one.run, mc.cores = 4 ))
+#     
+#   }
+#   
+#   s <- convert_to_char(X)
+#   
+#   D <- stringdistmatrix(s, s, 'hamming', nthread = 4)
+#   rownames(D) <- rownames(X)
+#   colnames(D) <- rownames(X)
+#   
+#   return(D)
+# }
+# 
 
 ###################### ANALYSIS ################################################
 
@@ -88,7 +77,7 @@ taxa_file <- read.csv('emp-data-loc/emp-taxonomy-train-test-loc.csv')
 taxa <- c('kingdom', 'phylum', 'class', 'order')
 
 # values of k
-kvals <- c(4:10)
+kvals <- c(4:7)
 
 # sequences, seqnames
 sequences <- taxa_file$sequence
