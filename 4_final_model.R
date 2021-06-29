@@ -83,7 +83,7 @@ rownames(X_test) <- paste(taxonomies_table_testing$ID,'-test', sep = '')
 
 for (kmer in colnames(kmerMatrix)){
   
-  X_test[,kmer] <- str_count(taxonomies_table_testing$sequence, kmer)
+  X_test[,kmer] <- str_count(taxonomies_table_testing$sequence, paste0("(?=",kmer,")"))
 }
 
 y_test <- taxonomies_table_testing[,taxa]
