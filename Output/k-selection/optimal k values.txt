@@ -1,0 +1,4 @@
+Optimal k value for clustering of level kingdom:4
+Optimal k value for clustering of level phylum:5
+Optimal k value for clustering of level class:5
+Optimal k value for clustering of level order:4
