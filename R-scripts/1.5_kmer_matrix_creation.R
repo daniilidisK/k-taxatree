@@ -15,7 +15,7 @@ source("R-scripts/count_kmers_functions.R")
 taxa_file <- read.csv('emp-data/emp-taxonomy-train-test.csv')
 
 # value of k
-k <- 8
+k <- 6
 
 # output folder
 dir.create("Output")
@@ -28,4 +28,4 @@ kmerMatrix <- count_kmers_in_file(sequences = taxa_file$sequence,
                                   seq_names = taxa_file$ID, 
                                   k = k)
 
-fwrite(kmerMatrix, paste0(output_folder, "/kmerMatrix_k_8.csv"))
+fwrite(kmerMatrix, paste0(output_folder, "/kmerMatrix_k_", k, ".csv"))

@@ -231,7 +231,8 @@ rf_hyperparameters_optimization <- function(Xy,
                                             mtry_list,
                                             ntrees_list, 
                                             taxa,
-                                            taxonomies_table) {
+                                            taxonomies_table,
+                                            output_txt) {
   
   # binary encoding
   taxa_columns <- which(colnames(Xy) %in% taxa)
@@ -271,7 +272,8 @@ rf_hyperparameters_optimization <- function(Xy,
                            ntrees_list,
                            Xy, 
                            Xy_to_add,
-                           n_kmers)
+                           n_kmers,
+                           output_txt)
     
     inputs <- rbind(inputs, new_table)
   }
@@ -285,26 +287,21 @@ rf_hyperparameters_optimization <- function(Xy,
   #                                          Xy_to_add = Xy_to_add, 
   #                                          n_kmers = n_kmers),
   #                          mc.cores = 4) 
-  
-  # # inputs <- inputs[, -3]
-  # inputs <- group_by(inputs,mtry, ntrees) %>%
-  #   summarize(mtry, ntrees, metric = sum(metric)) %>%
-  #   unique()
 
-  # inputs$metric <- inputs$metric / num_of_experiments
-  # 
+  inputs <- group_by(inputs,mtry, ntrees) %>%
+    summarize(mtry, ntrees, metric = sum(metric)) %>%
+    unique()
+
+  inputs$metric <- inputs$metric / num_of_experiments
   
-  
-  inputs$tuples <- paste(inputs$mtry, inputs$ntrees, sep = ',')
-  unique_tuples <- unique(inputs$tuples)
-  to_keep <- c()
-  for (tup in unique_tuples){
-    tup_indices <- which(inputs$tuples == tup)
-    inputs[tup_indices,]$metric <- sum(inputs[tup_indices,]$metric) / num_of_experiments
-    to_keep <- c(to_keep, tup_indices[1])
-  }
-  
-  inputs <- inputs[to_keep,-4]
+  # inputs$tuples <- paste(inputs$mtry, inputs$ntrees, sep = ',')
+  # unique_tuples <- unique(inputs$tuples)
+  # to_keep <- c()
+  # for (tup in unique_tuples){
+  #   tup_indices <- which(inputs$tuples == tup)
+  #   inputs[tup_indices,]$metric <- sum(inputs[tup_indices,]$metric) / num_of_experiments
+  #   to_keep <- c(to_keep, tup_indices[1])
+  # }
   
   return(inputs)
   
@@ -316,7 +313,8 @@ create_rf <- function(counter,
                       ntrees_list,
                       Xy,
                       Xy_to_add,
-                      n_kmers) {
+                      n_kmers,
+                      output_txt) {
   
   print(paste0("Iteration: ", counter))
   
@@ -364,22 +362,33 @@ create_rf <- function(counter,
   train.set = seq(1, nrow(X_train)) # train rows
   test.set = seq(nrow(X_train)+1, nrow(data)) # test rows
   
+  print("Data preparation done")
+  
   # Multi label model
   ml_task = makeMultilabelTask(data = data, target = targets)
+  
+  
+  print("multilabel task done")
   
   classif.lrn <- makeLearner("multilabel.randomForestSRC", 
                              predict.type = "prob", 
                              ntree = ntrees_list[1], 
                              mtry = mtry_list[1])
   
+  print("learner created")
+  
   # training
   model = train(classif.lrn, ml_task, subset = train.set)
+  
+  print("model trained")
   
   # # predict
   predictions = predict(model, 
                         task = ml_task, 
                         subset = test.set, 
                         type = 'prob')
+  
+  print("made predictions")
   
   # get predictions in [0,1] range
   test_DT <- data[test.set, ]
@@ -424,20 +433,37 @@ create_rf <- function(counter,
                                            response_pred, 
                                            undefined_value = "ignore")
   
+  write(paste(return.table$mtry[1], 
+              return.table$ntrees[1], 
+              return.table$metric[1], sep = " "),
+        output_txt, append = T)
+  
+  print("calculated metric")
+  
+  
   for (j in 2:nrow(return.table)) {
+    
+    print(paste0("Setting new hyperparameters, ntree: ", return.table$ntrees[j],
+                 "mtry: ", return.table$mtry[j]))
     
     learner.new = setHyperPars(classif.lrn,
                                par.vals = list(ntree = return.table$ntrees[j], 
                                                mtry = return.table$mtry[j]))
     
+    print("learner created")
+    
     # training
     model.new = train(learner.new, ml_task, subset = train.set)
+    
+    print("model trained")
     
     # # predict
     predictions = predict(model.new, 
                           task = ml_task, 
                           subset = test.set, 
                           type = 'prob')
+    
+    print("predictions made")
     
     who <- which(stringr::str_detect(colnames(predictions$data), "prob"))
     prob_pred <- predictions$data[, who]
@@ -453,6 +479,13 @@ create_rf <- function(counter,
     return.table$metric[j] <- macro_fmeasure(test_DT[, targets], 
                                              response_pred, 
                                              undefined_value = "ignore")
+    
+    write(paste(return.table$mtry[j], 
+                return.table$ntrees[j], 
+                return.table$metric[j], sep = " "),
+          output_txt, append = T)
+    
+    print("metric calculated")
     
   }
   

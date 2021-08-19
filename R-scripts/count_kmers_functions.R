@@ -33,11 +33,11 @@ count_kmers_in_file <- function(sequences, k, seq_names){
                 count_kmers_in_seq,
                 sequences = sequences, k = k, seq_names = seq_names)
   
-  one_fifth <- round(length(sequences) / 20)
+  one_fifth <- round(length(sequences) / 10)
   
   kmerMatrix <- data.table()
   
-  for (one.part in 1:20){
+  for (one.part in 1:10){
     
     temp <- rbindlist(out[1:one_fifth], fill = T)
     
@@ -53,7 +53,7 @@ count_kmers_in_file <- function(sequences, k, seq_names){
   }
   
   if (length(out) > 0) {
-    temp <- rbindlist(out[one_fifth * 20: length(out)], fill = T)
+    temp <- rbindlist(out[one_fifth * 10: length(out)], fill = T)
     temp[is.na(temp)] <- 0
     kmerMatrix <- rbind(kmerMatrix, temp, fill = T)
     rm(temp)

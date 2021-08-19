@@ -48,10 +48,10 @@ PCA_feature_selection <- function(kmerMatrix, info_perc){
 #kmerMatrix <- read.csv('C:/Users/User/Desktop/INAB/k-mers/empdata/emp-train-test_matrix_k_7.csv', 
 #                       row.names = 1)
 
-kmerMatrix <- read.csv('emp-data-loc/kmerMatrix.csv', row.names = 1)
+kmerMatrix <- read.csv('Output/kmer-matrix-creation/kmerMatrix_k_6.csv')
 
 # remove near zero variance predictors
-nzv <- nearZeroVar(kmerMatrix, freqCut = 15, uniqueCut = 0.7) # 0.3 
+nzv <- nearZeroVar(kmerMatrix, freqCut = 15, uniqueCut = 0.1) # 0.3 
 
 if(length(nzv) > 0){
   kmerMatrix <- kmerMatrix[, -nzv]
@@ -67,7 +67,9 @@ kmerMatrix <- kmerMatrix[, -highlyCorNZV]
 rm(corMat, highlyCorNZV)
 
 # PCA feature selection
-kmerMatrix <- PCA_feature_selection(kmerMatrix, info_perc = 0.90)
+kmerMatrix <- PCA_feature_selection(kmerMatrix, info_perc = 0.95)
+
+dir.create("Output/preprocessing")
 
 # save
-write.csv(kmerMatrix, 'emp-data-loc/kmerMatrix_fs.csv')
+write.csv(kmerMatrix, 'Output/preprocessing/kmerMatrix_fs.csv')

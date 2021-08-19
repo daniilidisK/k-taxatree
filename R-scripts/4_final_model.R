@@ -4,23 +4,31 @@ rm(list = ls())
 # dev.off(dev.list()["RStudioGD"])
 
 # libraries
+library(caret)
 library(UBL)
 library(splitstackshape)
 library(mlr)
+library(hash)
+# library(saveImageHigh)
 library(stringr)
-library(data.table)
-library(caret)
+
+# models library
+# library(C50)
+# library(e1071)
+#library(RWeka)
+#library(fill)
+library(tidyr)
+library(plyr)
+library(RSQLite)
 
 # source
+#source("method_cc.R")
 source('multilabel_functions.R')
 
 ####### FUNCTIONS ##################
 
 # taxa
 taxa <- c('kingdom', 'phylum', 'class', 'order')
-
-# specify output folder
-output_folder <- 'multi-label-emp'
 
 # taxonomies table
 taxonomyFilepath <- 'emp-data-loc/emp-taxonomy-train-test-loc.csv'
@@ -83,8 +91,13 @@ rownames(X_test) <- paste(taxonomies_table_testing$ID,'-test', sep = '')
 
 for (kmer in colnames(kmerMatrix)){
   
-  X_test[,kmer] <- str_count(taxonomies_table_testing$sequence, paste0("(?=",kmer,")"))
+  X_test[,kmer] <- str_count(taxonomies_table_testing$sequence, kmer)
 }
+
+# excluding singletons
+# out <- excluding_singletons(X_test, taxonomies_table_testing, taxa)
+# X_test <- out[[1]]
+# taxonomies_table_testing <- out[[2]]
 
 y_test <- taxonomies_table_testing[,taxa]
 y_test[which(y_test == 'Unassigned', arr.ind = TRUE)] <- ''
@@ -132,13 +145,13 @@ test.set = seq(n+1, dim(data)[1], by = 1) # test rows
 
 # Multi label model
 # loading optimal parameters
-params <- read.csv(paste0(output_folder, '/optimal hyperparameters.csv'), header = T)
+params <- read.csv('multi-label-emp/optimal hyperparameters.csv', header = T)
 ml_task = makeMultilabelTask(data = data, target = targets)
 classif.lrn <- makeLearner("multilabel.randomForestSRC", predict.type = "prob", ntree = params$ntrees, mtry = params$mtry)
 
 # training
 model = train(classif.lrn, ml_task, subset = train.set)
-saveRDS(model, "model.rds")
+saveRDS(model, "multi-label-emp/model.rds")
 
 # predict
 predictions = predict(model, task = ml_task, subset = test.set, type = 'prob')
@@ -150,7 +163,7 @@ colnames(y_pred) <- gsub("prob.","", colnames(y_pred))
 
 # evaluation
 test_metrics <- performance(predictions, measures = list(multilabel.hamloss, multilabel.subset01, multilabel.ppv, multilabel.tpr, multilabel.f1, multilabel.acc))
-write.csv(test_metrics, file = paste0(output_folder, '/validation_metrics_1.csv'))
+write.csv(test_metrics, file = 'multi-label-emp/test-metrics.csv')
 
 # construct predictions
 y_pred_modified <- modify_predictions(y_pred, threshold = 0, taxa)
@@ -172,57 +185,4 @@ results_table$Sequence <- testing_sequences
 rownames(results_table) <- taxonomies_table_testing$ID
 
 # write to csv
-write.csv(results_table,paste0(output_folder, '/validation_labels.csv'))
-
-
-############################## Metrics  ########################################
-library(mldr)
-
-y_pred$label <- y_pred_modified$`PRED LABELS`
-y_pred <- as.data.table(y_pred)
-
-test_DT <- data[test.set, ]
-
-who <- which(stringr::str_detect(colnames(predictions$data), "prob"))
-prob_pred <- predictions$data[, who]
-colnames(prob_pred) <- stringr::str_remove_all(colnames(prob_pred), "prob.")
-
-who <- which(stringr::str_detect(colnames(predictions$data), "response"))
-response_pred <- predictions$data[, who]
-colnames(response_pred) <- stringr::str_remove_all(colnames(response_pred), "response.")
-response_pred[response_pred == TRUE] <- 1
-response_pred[response_pred == FALSE] <- 0
-
-metrics_df <- data.table(metric = c("accuracy", "precision", "micro_precision",
-                                    "macro_precision", "recall", "micro_recall",
-                                    "macro_recall", "fmeasure", "micro_fmeasure",
-                                    "macro_fmeasure", "hamming_loss", "subset_accuracy",
-                                    "average_precision", "one_error", "coverage",
-                                    "ranking_loss"),
-                         value = 0)
-# Averaged metrics
-metrics_df$value[1] <- accuracy(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[2] <- precision(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[3] <- micro_precision(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[4] <- macro_precision(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[5] <- recall(test_DT[,targets], response_pred, undefined_value = "ignore")
-metrics_df$value[6] <- micro_recall(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[7] <- macro_recall(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[8] <- fmeasure(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[9] <- micro_fmeasure(test_DT[, targets], response_pred, undefined_value = "ignore")
-metrics_df$value[10] <- macro_fmeasure(test_DT[, targets], response_pred, undefined_value = "ignore")
-
-# Basic metrics
-metrics_df$value[11] <- hamming_loss(test_DT[, targets], response_pred)
-metrics_df$value[12] <- subset_accuracy(test_DT[, targets], response_pred)
-
-# Ranking based metrics
-metrics_df$value[13] <- average_precision(test_DT[, targets], prob_pred)
-metrics_df$value[14] <- one_error(test_DT[, targets], prob_pred)
-metrics_df$value[15] <- coverage(test_DT[, targets], prob_pred)
-metrics_df$value[16] <- ranking_loss(test_DT[, targets], prob_pred)
-
-
-write.csv(metrics_df,
-          paste0(output_folder, "/validation_metrics_2.csv"),
-          row.names = FALSE)
+write.csv(results_table,'multi-label-emp/test.csv')
