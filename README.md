@@ -1,1 +1,1 @@
-# kmerTaxonomyFF
+# kmerTaxonomy
