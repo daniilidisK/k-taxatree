@@ -1,1 +1,1 @@
-# kmerTaxonomy
+# k-taxatree
