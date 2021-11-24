@@ -232,7 +232,8 @@ rf_hyperparameters_optimization <- function(Xy,
                                             ntrees_list, 
                                             taxa,
                                             taxonomies_table,
-                                            output_txt) {
+                                            output_txt,
+                                            user_threshold) {
   
   # binary encoding
   taxa_columns <- which(colnames(Xy) %in% taxa)
@@ -263,7 +264,20 @@ rf_hyperparameters_optimization <- function(Xy,
   # prepare input vectors
   inputs <- data.table::data.table(mtry = numeric(),
                                    ntrees = numeric(),
-                                   metric = numeric())
+                                   accuracy = numeric(),
+  			                           micro_precision = numeric(),
+ 			                             macro_precision = numeric(),
+  			                           micro_recall = numeric(),
+  			                           macro_recall = numeric(),
+  			                           micro_fmeasure = numeric(),
+  			                           macro_fmeasure = numeric(),
+			                             hamming_loss = numeric(),
+			                             subset_accuracy = numeric(),
+			                           	 average_precision = numeric(),
+        			                     one_error = numeric(),
+  				                         coverage = numeric(), 
+  				                         ranking_loss = numeric())
+
   # create the model 
   for (counter in 1:num_of_experiments) {
     
@@ -273,7 +287,8 @@ rf_hyperparameters_optimization <- function(Xy,
                            Xy, 
                            Xy_to_add,
                            n_kmers,
-                           output_txt)
+                           output_txt,
+                           user_threshold)
     
     inputs <- rbind(inputs, new_table)
   }
@@ -288,11 +303,11 @@ rf_hyperparameters_optimization <- function(Xy,
   #                                          n_kmers = n_kmers),
   #                          mc.cores = 4) 
 
-  inputs <- group_by(inputs,mtry, ntrees) %>%
-    summarize(mtry, ntrees, metric = sum(metric)) %>%
-    unique()
+ # inputs <- group_by(inputs,mtry, ntrees) %>%
+ #   summarize(mtry, ntrees, metric = sum(metric)) %>%
+ #   unique()
 
-  inputs$metric <- inputs$metric / num_of_experiments
+#  inputs$metric <- inputs$metric / num_of_experiments
   
   # inputs$tuples <- paste(inputs$mtry, inputs$ntrees, sep = ',')
   # unique_tuples <- unique(inputs$tuples)
@@ -314,7 +329,8 @@ create_rf <- function(counter,
                       Xy,
                       Xy_to_add,
                       n_kmers,
-                      output_txt) {
+                      output_txt,
+                      user_threshold) {
   
   print(paste0("Iteration: ", counter))
   
@@ -388,6 +404,10 @@ create_rf <- function(counter,
                         subset = test.set, 
                         type = 'prob')
   
+  thr <- as.numeric(rep(user_threshold, length(targets)))
+  names(thr) <- targets
+  predictions <- setThreshold(predictions, threshold = thr)
+
   print("made predictions")
   
   # get predictions in [0,1] range
@@ -425,69 +445,200 @@ create_rf <- function(counter,
   # coverage(test_DT[, targets], prob_pred)
   # ranking_loss(test_DT[, targets], prob_pred)
   
-  return.table <- data.table(mtry = rep(mtry_list, each = length(ntrees_list)),
-                             ntrees = rep(ntrees_list, length(mtry_list)),
-                             metric = 0)
+  return.table <- data.table(mtry = mtry_list, #rep(mtry_list, each = length(ntrees_list)),
+                             ntrees = ntrees_list, #rep(ntrees_list, length(mtry_list)),
+			                       accuracy = 0,
+  			                     micro_precision = 0,
+ 			                       macro_precision = 0,
+  			                     micro_recall = 0,
+  			                     macro_recall = 0,
+  			                     micro_fmeasure = 0,
+  			                     macro_fmeasure = 0,
+			                       hamming_loss = 0,
+			                       subset_accuracy = 0,
+			                       average_precision = 0,
+  			                     one_error = 0,
+  			                     coverage = 0,
+  			                     ranking_loss = 0)
   
-  return.table$metric[1] <- macro_fmeasure(test_DT[, targets], 
+  return.table$accuracy[1] <- accuracy(test_DT[, targets], 
                                            response_pred, 
                                            undefined_value = "ignore")
+
+  return.table$micro_precision[1] <- micro_precision(test_DT[, targets], 
+                                           response_pred, 
+                                           undefined_value = "ignore")
+
+  return.table$macro_precision[1] <- macro_precision(test_DT[, targets], 
+                                           response_pred, 
+                                           undefined_value = "ignore")
+
+  return.table$micro_recall[1] <- micro_recall(test_DT[, targets], 
+                                           response_pred, 
+                                           undefined_value = "ignore")
+
+  return.table$macro_recall[1] <- macro_recall(test_DT[, targets], 
+                                           response_pred, 
+                                           undefined_value = "ignore")
+
+  return.table$micro_fmeasure[1] <- micro_fmeasure(test_DT[, targets], 
+                                           response_pred, 
+                                           undefined_value = "ignore")
+
+  return.table$macro_fmeasure[1] <- macro_fmeasure(test_DT[, targets], 
+                                           response_pred, 
+                                           undefined_value = "ignore")
+
+  return.table$hamming_loss[1] <- hamming_loss(test_DT[, targets], 
+                                           response_pred)
+
+  return.table$subset_accuracy[1] <- subset_accuracy(test_DT[, targets], 
+                                           response_pred)
+
+  return.table$average_precision[1] <- average_precision(test_DT[, targets], 
+                                           response_pred)
+  
+  return.table$one_error[1] <- one_error(test_DT[, targets], 
+                                           response_pred)
+  
+  return.table$coverage[1] <- coverage(test_DT[, targets], 
+                                           response_pred)
+  
+  return.table$ranking_loss[1] <- ranking_loss(test_DT[, targets], 
+                                           response_pred)
   
   write(paste(return.table$mtry[1], 
               return.table$ntrees[1], 
-              return.table$metric[1], sep = " "),
-        output_txt, append = T)
+              return.table$accuracy[1],
+	            return.table$micro_precision[1],
+	            return.table$macro_precision[1],
+	            return.table$micro_recall[1],
+	            return.table$macro_recall[1],
+	            return.table$micro_fmeasure[1],
+	            return.table$macro_fmeasure[1],
+	            return.table$hamming_loss[1], 
+	            return.table$subset_accuracy[1],
+              return.table$average_precision[1],
+              return.table$one_error[1],
+  	          return.table$coverage[1], 
+  	          return.table$ranking_loss[1], 
+              sep = " "),
+          output_txt, append = T)
   
   print("calculated metric")
   
   
-  for (j in 2:nrow(return.table)) {
-    
-    print(paste0("Setting new hyperparameters, ntree: ", return.table$ntrees[j],
-                 "mtry: ", return.table$mtry[j]))
-    
-    learner.new = setHyperPars(classif.lrn,
-                               par.vals = list(ntree = return.table$ntrees[j], 
-                                               mtry = return.table$mtry[j]))
-    
-    print("learner created")
-    
-    # training
-    model.new = train(learner.new, ml_task, subset = train.set)
-    
-    print("model trained")
-    
-    # # predict
-    predictions = predict(model.new, 
-                          task = ml_task, 
-                          subset = test.set, 
-                          type = 'prob')
-    
-    print("predictions made")
-    
-    who <- which(stringr::str_detect(colnames(predictions$data), "prob"))
-    prob_pred <- predictions$data[, who]
-    colnames(prob_pred) <- stringr::str_remove_all(colnames(prob_pred), "prob.")
-    
-    who <- which(stringr::str_detect(colnames(predictions$data), "response"))
-    response_pred <- predictions$data[, who]
-    colnames(response_pred) <- stringr::str_remove_all(colnames(response_pred), "response.")
-    response_pred[response_pred == TRUE] <- 1
-    response_pred[response_pred == FALSE] <- 0
-    
-    
-    return.table$metric[j] <- macro_fmeasure(test_DT[, targets], 
-                                             response_pred, 
-                                             undefined_value = "ignore")
-    
-    write(paste(return.table$mtry[j], 
-                return.table$ntrees[j], 
-                return.table$metric[j], sep = " "),
-          output_txt, append = T)
-    
-    print("metric calculated")
-    
-  }
+   for (j in 2:nrow(return.table)) {
+  
+     print(paste0("Setting new hyperparameters, ntree: ", return.table$ntrees[j],
+                  "mtry: ", return.table$mtry[j]))
+  
+     learner.new = setHyperPars(classif.lrn,
+                                par.vals = list(ntree = return.table$ntrees[j],
+                                                mtry = return.table$mtry[j]))
+  
+     print("learner created")
+  
+     # training
+     model.new = train(learner.new, ml_task, subset = train.set)
+  
+     print("model trained")
+  
+     # # predict
+     predictions = predict(model.new,
+                           task = ml_task,
+                           subset = test.set,
+                           type = 'prob')
+  
+     print("predictions made")
+  
+     who <- which(stringr::str_detect(colnames(predictions$data), "prob"))
+     prob_pred <- predictions$data[, who]
+     colnames(prob_pred) <- stringr::str_remove_all(colnames(prob_pred), "prob.")
+  
+     who <- which(stringr::str_detect(colnames(predictions$data), "response"))
+     response_pred <- predictions$data[, who]
+     colnames(response_pred) <- stringr::str_remove_all(colnames(response_pred), "response.")
+     response_pred[response_pred == TRUE] <- 1
+     response_pred[response_pred == FALSE] <- 0
+  
+  
+    # return.table$metric[j] <- macro_fmeasure(test_DT[, targets],
+     #                                         response_pred,
+      #                                        undefined_value = "ignore")
+  
+    # write(paste(return.table$mtry[j],
+     #            return.table$ntrees[j],
+      #           return.table$metric[j], sep = " "),
+      #     output_txt, append = T)
+  
+     return.table$accuracy[j] <- accuracy(test_DT[, targets], 
+                                          response_pred, 
+                                          undefined_value = "ignore")
+     
+     return.table$micro_precision[j] <- micro_precision(test_DT[, targets], 
+                                                        response_pred, 
+                                                        undefined_value = "ignore")
+     
+     return.table$macro_precision[j] <- macro_precision(test_DT[, targets], 
+                                                        response_pred, 
+                                                        undefined_value = "ignore")
+     
+     return.table$micro_recall[j] <- micro_recall(test_DT[, targets], 
+                                                  response_pred, 
+                                                  undefined_value = "ignore")
+     
+     return.table$macro_recall[j] <- macro_recall(test_DT[, targets], 
+                                                  response_pred, 
+                                                  undefined_value = "ignore")
+     
+     return.table$micro_fmeasure[j] <- micro_fmeasure(test_DT[, targets], 
+                                                      response_pred, 
+                                                      undefined_value = "ignore")
+     
+     return.table$macro_fmeasure[j] <- macro_fmeasure(test_DT[, targets], 
+                                                      response_pred, 
+                                                      undefined_value = "ignore")
+     
+     return.table$hamming_loss[j] <- hamming_loss(test_DT[, targets], 
+                                                  response_pred)
+     
+     return.table$subset_accuracy[j] <- subset_accuracy(test_DT[, targets], 
+                                                        response_pred)
+     
+     return.table$average_precision[j] <- average_precision(test_DT[, targets], 
+                                                            response_pred)
+     
+     return.table$one_error[j] <- one_error(test_DT[, targets], 
+                                            response_pred)
+     
+     return.table$coverage[j] <- coverage(test_DT[, targets], 
+                                          response_pred)
+     
+     return.table$ranking_loss[j] <- ranking_loss(test_DT[, targets], 
+                                                  response_pred)
+  
+     write(paste(return.table$mtry[j], 
+                 return.table$ntrees[j], 
+                 return.table$accuracy[j],
+                 return.table$micro_precision[j],
+                 return.table$macro_precision[j],
+                 return.table$micro_recall[j],
+                 return.table$macro_recall[j],
+                 return.table$micro_fmeasure[j],
+                 return.table$macro_fmeasure[j],
+                 return.table$hamming_loss[j], 
+                 return.table$subset_accuracy[j],
+                 return.table$average_precision[j],
+                 return.table$one_error[j],
+                 return.table$coverage[j], 
+                 return.table$ranking_loss[j], 
+                 sep = " "),
+           output_txt, append = T)
+  
+     print("metric calculated")
+  
+   }
   
   return(return.table) 
 }
@@ -776,4 +927,54 @@ modify_predictions <- function(y_pred, threshold, taxa){
   
   return(y_pred_modified)
   
+}
+
+keep_one_label <- function(y_pred) {
+  
+
+  taxa <- c("k__", "p__", "c__", "o__")
+  
+  probs_columns <- which(str_detect(colnames(y_pred), "prob."))
+  probs_columns <- y_pred[, probs_columns]
+  resp_columns <- which(str_detect(colnames(y_pred), "response."))
+  resp_columns <- y_pred[, resp_columns]
+  resp_columns[resp_columns == TRUE] <- "FALSE"
+  truth_columns <- which(str_detect(colnames(y_pred), "truth."))
+  truth_columns <-y_pred[, truth_columns]
+  
+  final_labels <- data.table("k__" = character(nrow(y_pred)),
+                             "p__" = character(nrow(y_pred)),
+                             "c__" = character(nrow(y_pred)),
+                             "o__" = character(nrow(y_pred)))
+  
+  for (i in taxa) {
+    
+    one_taxa <- which(str_detect(colnames(probs_columns), i))
+    
+    for (one_seq in 1:nrow(y_pred)) {
+      
+      one <- which.max(probs_columns[one_seq, one_taxa])
+      
+      value_max <- max(probs_columns[one_seq, one_taxa])
+      names(one) <- str_replace_all(names(one), "prob.", "response.")
+      who_max <- which(colnames(resp_columns) %in% names(one))
+      
+      resp_columns[one_seq, who_max] <- "TRUE"
+      
+      names(one) <- str_remove_all(names(one), i)
+      names(one) <- str_remove_all(names(one), "response.")
+      
+      final_labels[one_seq, i] <- paste0(names(one), " ",value_max)
+      
+    }
+    
+  }
+  
+  y_pred <- cbind(truth_columns, probs_columns, resp_columns)
+  
+  colnames(final_labels) <- c("superkingdom", "phylum", "class", "order")
+  
+  
+  return(list("y_pred" = y_pred, "final_labels" = final_labels))
+
 }

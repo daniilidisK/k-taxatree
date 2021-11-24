@@ -17,6 +17,9 @@ library(hash)
 # source
 source('R-scripts/multilabel_functions.R')
 
+# get input from user
+args = commandArgs(trailingOnly=TRUE)
+
 # taxa
 taxa <- c('kingdom', 'phylum', 'class', 'order')
 
@@ -108,14 +111,14 @@ write.csv(outputs,
 rm(binary_Xy, binary_y, my_mldr, outputs)
 
 # hyperparameter optimization
-output_txt <- paste0(output_folder, "/grid-search hp opt metrics.txt")
+output_txt <- paste0(output_folder, "/grid-search-hp-opt-metrics.txt")
 file.create(output_txt)
-write("mtry ntrees metric", output_txt, append = T)
+write("mtry ntrees accuracy micro-precision macro-precision micro-recall macro-recall micro-fmeasure macro-fmeasure hamming-loss subset-accuracy average_precision one_error coverage ranking_loss", output_txt, append = T)
 
 class_opt <- floor(sqrt(ncol(kmerMatrix)))
-mtry_list <- class_opt + 1
-ntrees_list <- seq(50, 500, 50)
-num_of_experiments <- 1
+mtry_list <- 17
+ntrees_list <- 300
+num_of_experiments <- 10
 mat <- rf_hyperparameters_optimization(Xy = Xy,
                                        Xy_to_add = Xy_to_add,
                                        num_of_experiments = num_of_experiments,
@@ -123,20 +126,21 @@ mat <- rf_hyperparameters_optimization(Xy = Xy,
                                        ntrees_list = ntrees_list,
                                        taxa = taxa,
                                        taxonomies_table = taxonomies_table,
-                                       output_txt = output_txt)
+                                       output_txt = output_txt,
+                                       user_threshold = args[1])
 
-opt_results <- which(mat$metric == max(mat$metric))
-opt_results <- opt_results[1]
-mtry_opt <- mat$mtry[opt_results] # for nzv_corr_boruta: 11, for kmerAnalyzer: 10
-ntrees_opt <- mat$ntrees[opt_results] # for nzv_corr_boruta: 500, for kmerAnalyzer: 150
+#opt_results <- which(mat$metric == max(mat$metric))
+#opt_results <- opt_results[1]
+#mtry_opt <- mat$mtry[opt_results] # for nzv_corr_boruta: 11, for kmerAnalyzer: 10
+#ntrees_opt <- mat$ntrees[opt_results] # for nzv_corr_boruta: 500, for kmerAnalyzer: 150
 
 write.csv(mat,
           paste0(output_folder, "/hp grid search.csv"),
           row.names = FALSE)
 
-write.csv(mat[opt_results, ],
-            paste0(output_folder, "/optimal hyperparameters.csv"),
-            row.names = FALSE)
+#write.csv(mat[opt_results, ],
+#            paste0(output_folder, "/optimal hyperparameters.csv"),
+#            row.names = FALSE)
 
 # calculating metrics and feature importances
 # num_of_experiments = 10
