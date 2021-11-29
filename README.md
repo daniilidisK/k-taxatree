@@ -4,7 +4,7 @@ k-taxatree is a classification workflow written in [R](https://www.r-project.org
 
 ## Dataset
 
-The project utilizes data from the Earth Microbiome Project. A dataset of 91k sequences of 150bp-length targeted on the 16S rRNA gene of the V4 region. The dataset was split in two subsets, train-test and validation, consisting of 30% and 70% of the initial dataset respectefully. The data are available in the [emp-data](https://github.com/BiodataAnalysisGroup/k-taxatree/tree/main/emp-data) folder.
+The project utilizes data from the Earth Microbiome Project and retrieved using the R package [empdata](https://github.com/nikopech/empdata). A dataset of 91k sequences of 150bp-length targeted on the 16S rRNA gene of the V4 region. The dataset was split in two subsets, train-test and validation, consisting of 30% and 70% of the initial dataset respectefully. The subsets are available in the [emp-data](https://github.com/BiodataAnalysisGroup/k-taxatree/tree/main/emp-data) folder.
 
 All data sets were collected from the ftp site of the Earth Microbiome Project.
 
