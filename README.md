@@ -64,6 +64,8 @@ The project provides the input datasets and the outputs generated in every step 
 
 The workflow was run on an Ubuntu server of 141GB RAM and 32 cores and required a total of approximately 20 days. 
 
+Given the optimal hyperparameters (`mtry` = 17, `ntree` = 300, `predict.threshold` = 0.2) the user the recreate the final-model using the `05_final_model.R` script. Alternatively, the model is provided in the `model.rds` file in the [final-model](https://github.com/BiodataAnalysisGroup/k-taxatree/tree/main/Output/final-model) folder and can be used to make predictions. The latter is fully implemented in the scripts `06_unassigned_predictions.R` and `07_validation_predictions.R`.
+
 
 For more details of the individual scripts, please refer to the [wiki](https://github.com/BiodataAnalysisGroup/k-taxatree/wiki).
 
