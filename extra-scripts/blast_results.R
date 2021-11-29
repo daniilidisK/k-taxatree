@@ -12,7 +12,7 @@ x = paste0(">", test$ID[1:25], "\n", test$sequence[1:25], "\n")
 x = paste(x, collapse = "")
 
 res <- blastSequences(x,                               #test$sequence[1],
-		                  hitListSize = 20,               #per sequence????
+		                  #hitListSize = 20,               #per sequence????
 			                timeout = 360, 
 			                as=c("data.frame"))
 
@@ -89,4 +89,4 @@ for (one_seq in unique(new_res$Iteration_query_def)){
 
 
 
-fwrite(results_all, file = "results_table_20.csv", sep = ",")
+fwrite(results_all, file = "results_table.csv", sep = ",")
