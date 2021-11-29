@@ -12,13 +12,16 @@ library(plyr)
 # INPUTS -----------------
 
 # input files
-taxa_file <- read.csv('emp-data/emp-taxonomy-train-test.csv')
+taxa_file <- 'emp-data/emp-taxonomy-train-test.csv'
+
+taxa_file <- read.csv(taxa_file)
+
+
+# values of k
+kvals <- c(4:9)
 
 # taxa
 taxa <- c('kingdom', 'phylum', 'class', 'order')
-
-# values of k
-kvals <- c(9:12)
 
 # output folder
 dir.create("Output")
