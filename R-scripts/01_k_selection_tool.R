@@ -129,7 +129,7 @@ colnames(silh_scores_matrix) <- taxa
 
 output_txt <- paste0(output_folder, "/silhouette_scores.txt")
 file.create(output_txt)
-write(paste(taxa, collapse =","), output_txt, append = T)
+write(paste("k", paste(taxa, collapse =" "), sep = " "), output_txt, append = T)
 
 # Analysis
 for (k in kvals){
@@ -169,6 +169,7 @@ for (k in kvals){
   }
   
   silh_scores_matrix[as.character(k),] <- silh_row
+  silh_row <- c(k, silh_row)
   write(silh_row, output_txt, append = T)
   
   rm(silh_row, targets, D, t, s, to_drop)
