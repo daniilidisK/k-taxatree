@@ -18,7 +18,7 @@ library(stringr)
 
 
 # source
-source('R-scripts/multilabel_functions.R')
+source('multilabel_functions.R')
 
 # Prepare input to the model (train set) -------------
 
