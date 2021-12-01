@@ -20,19 +20,19 @@ library(stringr)
 # source
 source('multilabel_functions.R')
 
-# Prepare input to the model (train set) -------------
+# Prepare input to the model ------------
+#hp values
+ntree <- 300
+mtry <- 17
 
 # taxa
 taxa <- c('kingdom', 'phylum', 'class', 'order')
-prediction_theshold <- 0.5
 
 # taxonomies table
-# taxonomyFilepath <- 'emp-data-loc/emp-taxonomy-train-test-loc.csv'
 taxonomyFilepath <- 'emp-data/emp-taxonomy-train-test.csv'
 taxonomies_table <- read.csv(taxonomyFilepath) #[,-1]
 
 # loading data matrix
-# kmerMatrix <- read.csv('emp-data-loc/kmerMatrix_fs.csv', row.names = 1)
 kmerMatrix <- read.csv('Output/preprocessing/kmerMatrix_fs.csv', row.names = 1)
 rownames(kmerMatrix) <- taxonomies_table$ID
 
@@ -178,8 +178,8 @@ ml_task = makeMultilabelTask(data = data,
 
 classif.lrn <- makeLearner("multilabel.randomForestSRC", 
                            predict.type = "prob", 
-                           ntree = 300, #300
-                           mtry = 17)   #17
+                           ntree = ntree, #300
+                           mtry = mtry)   #17
 
 # training
 model = train(classif.lrn, ml_task, subset = train.set)
