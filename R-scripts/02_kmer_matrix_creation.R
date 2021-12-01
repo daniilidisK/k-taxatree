@@ -7,7 +7,7 @@ library(parallel)
 library(data.table)
 library(plyr)
 
-source("R-scripts/count_kmers_functions.R")
+source("count_kmers_functions.R")
 
 # INPUTS -----------------
 
