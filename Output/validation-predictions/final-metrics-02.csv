@@ -1,0 +1,2 @@
+,accuracy,micro_precision,macro_precision,micro_recall,macro_recall,micro_fmeasure,macro_fmeasure
+1,0.9524,0.9608,0.9363,0.9886,0.8497,0.9745,0.8677
