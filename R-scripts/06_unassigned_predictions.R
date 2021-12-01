@@ -9,12 +9,13 @@ library(mldr)
 library(stringr)
 
 # source
-source('R-scripts/multilabel_functions.R')
+source('multilabel_functions.R')
 
 # Set inputs -------------
 
 # taxa
-prediction_theshold <- 0.2
+predict_theshold <- 0.2
+max_prob <- T
 
 # input data
 input_data <- read.csv('emp-data/Unassigned-sequences.csv') #[,-1]
@@ -58,19 +59,23 @@ dir.create(folder_model)
 # predict
 predictions = predict(my_model, newdata = Xy_test)
 
-# evaluation
-# thr <- rep(prediction_theshold, length(labels))
-# names(thr) <- labels
-# predictions <- setThreshold(predictions, threshold = thr)
-
-
-one_predictions <- keep_one_label(predictions$data)
-
-fwrite(one_predictions$final_labels ,
+if (max_prob == T){
+  new_predictions <- keep_one_label(predictions$data)
+  
+  fwrite(new_predictions$final_labels ,
        paste0(folder_model, "/unassigned-labels.csv"))
 
 
-fwrite(one_predictions$y_pred ,
+  fwrite(new_predictions$y_pred ,
        paste0(folder_model, "/unassigned-predictions.csv"))
 
+} else {
+  thr <- rep(predict_theshold, length(labels))
+  names(thr) <- labels
+  new_predictions <- setThreshold(predictions, threshold = thr)
+  
+  fwrite(new_predictions$data,
+       paste0(folder_model, "/unassigned-predictions.csv"))
+
+}
 
