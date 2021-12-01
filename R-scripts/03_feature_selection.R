@@ -6,7 +6,10 @@ rm(list = ls())
 library(caret)
 library(stats)
 
-# fucntion - PCA feature selection -  NOT USED
+# Importing kmerMatrix
+kmerMatrix <- read.csv('Output/kmer-matrix-creation/kmerMatrix_k_6.csv')
+
+# fucntion - PCA feature selection 
 PCA_feature_selection <- function(kmerMatrix, info_perc){
   
   kmerMatrix.pca <- prcomp(kmerMatrix, center = FALSE, scale. = FALSE)
@@ -44,11 +47,6 @@ PCA_feature_selection <- function(kmerMatrix, info_perc){
   return(kmerMatrix)
 }
 
-# Importing kmerMatrix
-#kmerMatrix <- read.csv('C:/Users/User/Desktop/INAB/k-mers/empdata/emp-train-test_matrix_k_7.csv', 
-#                       row.names = 1)
-
-kmerMatrix <- read.csv('Output/kmer-matrix-creation/kmerMatrix_k_6.csv')
 
 # remove near zero variance predictors
 nzv <- nearZeroVar(kmerMatrix, freqCut = 15, uniqueCut = 0.1) # 0.3 
