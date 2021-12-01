@@ -18,7 +18,7 @@ library(stringr)
 
 
 # source
-source('R-scripts/multilabel_functions.R')
+source('multilabel_functions.R')
 
 # Prepare input to the model (train set) -------------
 
@@ -27,7 +27,8 @@ print(start_time)
 
 # taxa
 taxa <- c('kingdom', 'phylum', 'class', 'order')
-prediction_theshold <- 0.2
+predict_theshold <- 0.2
+max_prob <- T
 
 my_model <- readRDS("Output/final-model/model.rds")
 labels <- my_model$learner.model$yvar.names
@@ -94,23 +95,17 @@ dir.create(folder_model)
 # predict
 predictions = predict(my_model, newdata = Xy_test)
 
-# 
-# thr <- rep(prediction_theshold, length(labels))
-# names(thr) <- labels
-# predictions <- setThreshold(predictions, threshold = thr)
+if (max_prob == T){
+  one_predictions <- keep_one_label(predictions$data)
+  y_pred <- one_predictions$y_pred
+} else {
+  
+  thr <- rep(predict_theshold, length(labels))
+  names(thr) <- labels
+  predictions <- setThreshold(predictions, threshold = thr)
+  y_pred <- predictions$data
+}
 
-#one_predictions <- keep_one_label(predictions$data)
-
-#fwrite(one_predictions$final_labels ,
-#       paste0(folder_model, "/labels.csv"))
-#
-
-#fwrite(one_predictions$y_pred ,
-#       paste0(folder_model, "/predictions.csv"))
-
-#y_pred <- one_predictions$y_pred
-
-y_pred <- predictions$data
 
 #y_pred <- y_pred[,which(startsWith(colnames(y_pred), 'prob.'))]
 #colnames(y_pred) <- gsub("prob.","", colnames(y_pred))
